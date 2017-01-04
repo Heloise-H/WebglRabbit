@@ -1,0 +1,12 @@
+兔子：
+vertex 0-315
+faces 588
+index 0-1763
+草地：
+vertex 316-351
+faces 18
+index 1764-1817
+鸽子：
+vertex 352-17309
+faces 33916
+index 1818-103565

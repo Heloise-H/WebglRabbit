@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>camera</title>
+
+    <!--定义几个按钮-->
+    <p>
+        <button id="buttonlightx">光源沿x轴正向移动</button>
+        <button id="buttonlightxf">光源沿x轴负向移动</button>
+        <button id="buttonlighty">光源沿y轴正向移动</button>
+        <button id="buttonlightyf">光源沿y轴负向移动</button>
+        <button id="buttonlightz">光源沿z轴正向移动</button>
+        <button id="buttonlightzf">光源沿z轴负向移动</button>
+    </p>
+
+    <!--定义顶点着色器
+    Projection为视景体
+    ModelView为视点-->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+
+     attribute  vec4 vPosition;
+        attribute  vec4 vNormal;
+
+        attribute vec4 vColor;
+        attribute vec2 vTexCoord;
+
+
+        varying vec4 fColor;
+        varying vec2 fTexCoord;
+
+
+        uniform vec4 lightambient, lightdiffuse, lightspecular;
+        uniform vec4 lightambient2, lightdiffuse2, lightspecular2;
+        uniform vec4 materialambient, materialdiffuse,materialspecular;
+        uniform mat4 ModelView;
+        uniform mat4 Projection;
+        uniform mat4 Conversition;
+        uniform vec4 lightPosition;
+        uniform vec4 lightPosition2;
+        uniform float shininess;
+        uniform mat3 normalMatrix;
+
+        //基于顶点计算光照
+        void main()
+       {
+        vec3 pos=( ModelView * vPosition).xyz;
+        vec3 light=lightPosition.xyz;
+        vec3 L=normalize(light-pos);
+        vec3 E=normalize(-pos);
+        vec3 H=normalize(L+E);
+        vec3 N=normalize((ModelView * vNormal).xyz );
+        vec4 ambient=lightambient*materialambient;
+        float Kd=max(dot(L,N),0.0);
+        vec4 diffuse=Kd * lightdiffuse*materialdiffuse;
+        float Ks=pow(max(dot(N,H),0.0),shininess);
+        vec4 specular=Ks*lightspecular*materialspecular;
+        if(dot(L,N)<0.0){
+        specular=vec4(0,0,0,1.0);
+        }
+
+        vec3 light2=lightPosition2.xyz;
+        vec3 L2=normalize(light2-pos);
+        vec3 E2=normalize(-pos);
+        vec3 H2=normalize(L2+E2);
+        vec3 N2=normalize((ModelView * vNormal).xyz );
+        vec4 ambient2=lightambient2*materialambient;
+        float Kd2=max(dot(L2,N2),0.0);
+        vec4 diffuse2=Kd * lightdiffuse2*materialdiffuse;
+        float Ks2=pow(max(dot(N2,H2),0.0),shininess);
+        vec4 specular2=Ks*lightspecular2*materialspecular;
+        if(dot(L2,N2)<0.0){
+        specular2=vec4(0,0,0.0,1.0);}
+
+        gl_Position = Projection * ModelView * Conversition * vPosition;
+        fColor = ambient +ambient2+ diffuse+diffuse2 +specular+specular2+vColor;
+        fColor.a = 1.0;
+        fTexCoord=vTexCoord;
+
+
+   }
+    </script>
+
+    <!--定义片元着色器
+    precision定义精度
+    uniform修饰的变量可以改变，可以从js文件里传过来-->
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 fTexCoord;
+        varying vec4 fColor;
+        uniform sampler2D texture0;
+        uniform sampler2D texture1;
+        uniform sampler2D texture2;
+        uniform sampler2D texture3;
+		uniform int bTexCoord;
+        void main(){
+        if(bTexCoord==0)
+          gl_FragColor = (texture2D( texture0, fTexCoord)+fColor)*0.6;
+		else if(bTexCoord==1)
+          gl_FragColor = texture2D( texture1, fTexCoord)+fColor;
+        else if(bTexCoord==2)
+          gl_FragColor = texture2D( texture2, fTexCoord)+fColor;
+        else if(bTexCoord==3)
+          gl_FragColor = texture2D( texture3, fTexCoord)+fColor;
+        else gl_FragColor=fColor;
+        }
+    </script>
+
+    <script type="text/javascript" src="Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="Common/initShaders.js"></script>
+    <script type="text/javascript" src="Common/MV.js"></script>
+    <script type="text/javascript" src="model.js"></script>
+    <script type="text/javascript" src="final.js"></script>
+
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+    Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<img id = "texImage" src = "rabbit.jpg" hidden></img>
+<img id = "texImage1" src = "BackGround.jpg" hidden></img>
+<img id = "texImage2" src = "dove.jpg" hidden></img>
+<img id = "texImage3" src = "sun.jpg" hidden></img>
+</body>
+</html>
